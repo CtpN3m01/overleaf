@@ -14,7 +14,7 @@ services:
       - 80:80
     stop_grace_period: 60s
     volumes:
-      - ~/sharelatex_data:/var/lib/overleaf
+      - ~/sharelatex_data_v2:/var/lib/overleaf
       ########################################################################
       ####  Server Pro: Uncomment the following line to mount the docker  ####
       ####             socket, required for Sibling Containers to work    ####
@@ -41,7 +41,7 @@ services:
       ## Set for SSL via nginx-proxy
       #VIRTUAL_HOST: 103.112.212.22
 
-      # OVERLEAF_SITE_URL: http://overleaf.example.com
+      OVERLEAF_SITE_URL: https://overleaf.eanel.pro
       # OVERLEAF_NAV_TITLE: Overleaf Community Edition
       # OVERLEAF_HEADER_IMAGE_URL: http://example.com/mylogo.png
       # OVERLEAF_ADMIN_EMAIL: support@it.com
@@ -76,14 +76,14 @@ services:
       ## so the following environment variables must be commented out to avoid compile issues.
       ##
       ## Sandboxed Compiles: https://docs.overleaf.com/on-premises/configuration/overleaf-toolkit/server-pro-only-configuration/sandboxed-compiles
-      SANDBOXED_COMPILES: "true"
+      SANDBOXED_COMPILES: "false"
       ### Bind-mount source for /var/lib/overleaf/data/compiles inside the container.
       SANDBOXED_COMPILES_HOST_DIR_COMPILES: "/home/user/sharelatex_data/data/compiles"
       ### Bind-mount source for /var/lib/overleaf/data/output inside the container.
       SANDBOXED_COMPILES_HOST_DIR_OUTPUT: "/home/user/sharelatex_data/data/output"
       ### Backwards compatibility (before Server Pro 5.5)
-      DOCKER_RUNNER: "true"
-      SANDBOXED_COMPILES_SIBLING_CONTAINERS: "true"
+      DOCKER_RUNNER: "false"
+      SANDBOXED_COMPILES_SIBLING_CONTAINERS: "false"
 
       ## Works with test LDAP server shown at bottom of docker compose
       # OVERLEAF_LDAP_URL: 'ldap://ldap:389'
@@ -103,11 +103,11 @@ services:
 
   mongo:
     restart: always
-    image: mongo:6.0
+    image: mongo:8.0
     container_name: mongo
     command: "--replSet overleaf"
     volumes:
-      - ~/mongo_data:/data/db
+      - ~/mongo_data_v2:/data/db
       - ./bin/shared/mongodb-init-replica-set.js:/docker-entrypoint-initdb.d/mongodb-init-replica-set.js
     environment:
       MONGO_INITDB_DATABASE: sharelatex
@@ -126,7 +126,7 @@ services:
     image: redis:6.2
     container_name: redis
     volumes:
-      - ~/redis_data:/data
+      - ~/redis_data_v2:/data
 
   # ldap:
   #    restart: always
