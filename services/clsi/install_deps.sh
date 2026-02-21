@@ -4,6 +4,12 @@ set -ex
 apt-get update
 
 apt-get install -y \
+  latexmk \
+  texlive-latex-base \
+  texlive-latex-recommended \
+  texlive-fonts-recommended \
+  texlive-pictures \
+  texlive-plain-generic \
   poppler-utils \
   ghostscript \
 

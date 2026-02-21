@@ -26,7 +26,7 @@ services:
       - dev.env
     environment:
       - TEXLIVE_IMAGE=texlive-full # docker build texlive -t texlive-full
-      - SANDBOXED_COMPILES=true
+      - SANDBOXED_COMPILES=false
       - SANDBOXED_COMPILES_HOST_DIR_COMPILES=${PWD}/compiles
       - SANDBOXED_COMPILES_HOST_DIR_OUTPUT=${PWD}/output
     user: root
@@ -89,8 +89,6 @@ services:
   mongo:
     image: mongo:6.0
     command: --replSet overleaf
-    ports:
-      - "127.0.0.1:27017:27017" # for debugging
     volumes:
       - mongo-data:/data/db
       - ../bin/shared/mongodb-init-replica-set.js:/docker-entrypoint-initdb.d/mongodb-init-replica-set.js
@@ -139,11 +137,15 @@ services:
       - dev.env
     environment:
       - APP_NAME=Overleaf Community Edition
+      - ADMIN_PRIVILEGE_AVAILABLE=true
+      - PUBLIC_URL=https://overleaf.eanel.pro
       - ENABLED_LINKED_FILE_TYPES=project_file,project_output_file
       - EMAIL_CONFIRMATION_DISABLED=true
       - NODE_ENV=development
       - OVERLEAF_ALLOW_PUBLIC_ACCESS=true
     command: ["node", "app.mjs"]
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - sharelatex-data:/var/lib/overleaf
       - web-data:/overleaf/services/web/data
@@ -170,5 +172,6 @@ services:
       ["npx", "webpack", "serve", "--config", "webpack.config.dev-env.js"]
     ports:
       - "127.0.0.1:80:3808"
+      - "127.0.0.1:8080:3808"
     volumes:
       - ./webpack.config.dev-env.js:/overleaf/services/web/webpack.config.dev-env.js

@@ -10,4 +10,7 @@ mkdir -p /overleaf/services/clsi/cache && chown node:node /overleaf/services/cls
 mkdir -p /overleaf/services/clsi/compiles && chown node:node /overleaf/services/clsi/compiles
 mkdir -p /overleaf/services/clsi/output && chown node:node /overleaf/services/clsi/output
 
+# Some runuser setups clear PATH, which breaks latexmk/pdflatex resolution.
+export PATH="${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+
 exec runuser -u node -- "$@"
