@@ -7,3 +7,9 @@ docker-compose.override.yml
 node_modules
 compiles/
 output/
+
+# local backup/volume data (restores)
+backup-docker-data/
+mongo_data_v2/
+redis_data_v2/
+sharelatex_data_v2/
