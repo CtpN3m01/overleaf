@@ -21,13 +21,13 @@ import CLSICacheHandler from './CLSICacheHandler.js'
 import StatsManager from './StatsManager.js'
 import SafeReader from './SafeReader.js'
 import LatexMetrics from './LatexMetrics.js'
+import LatexPackageAutoInstaller from './LatexPackageAutoInstaller.js'
 import { callbackifyMultiResult } from '@overleaf/promise-utils'
 
 const { downloadLatestCompileCache, downloadOutputDotSynctexFromCompileCache } =
   CLSICacheHandler
 const { emitPdfStats } = ContentCacheMetrics
 const { enableLatexMkMetrics, addLatexFdbMetrics } = LatexMetrics
-const { shouldSkipMetrics } = ClsiMetrics
 
 const KNOWN_LATEXMK_RULES = new Set([
   'biber',
@@ -42,6 +42,12 @@ const KNOWN_LATEXMK_RULES = new Set([
 ])
 
 const LATEX_PASSES_RULES = new Set(['latex', 'lualatex', 'xelatex', 'pdflatex'])
+
+function shouldSkipMetrics(request) {
+  return ['clsi-perf', 'health-check', 'clsi-cache-template'].includes(
+    request.metricsOpts.path
+  )
+}
 
 function getCompileName(projectId, userId) {
   if (userId != null) {
@@ -195,7 +201,7 @@ async function doCompile(request, stats, timings) {
   enableLatexMkMetrics(stats)
 
   try {
-    await LatexRunner.promises.runLatex(compileName, {
+    await _runLatexWithAutoInstall(request, compileName, {
       directory: compileDir,
       mainFile: request.rootResourcePath,
       compiler: request.compiler,
@@ -327,6 +333,63 @@ async function doCompile(request, stats, timings) {
   }
 
   return { outputFiles, buildId }
+}
+
+async function _runLatexWithAutoInstall(request, compileName, options) {
+  const maxRetries = Math.max(0, LatexPackageAutoInstaller.getMaxRetries())
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const output = await LatexRunner.promises.runLatex(compileName, options)
+      const installResult =
+        attempt < maxRetries
+          ? await LatexPackageAutoInstaller.promises.installMissingPackageFromOutput(
+              request.project_id,
+              output
+            )
+          : null
+
+      if (!installResult) {
+        return output
+      }
+
+      logger.info(
+        {
+          projectId: request.project_id,
+          userId: request.user_id,
+          compileAttempt: attempt + 1,
+          installer: installResult.installer,
+          missingFile: installResult.missingFile,
+          packages: installResult.packages,
+        },
+        'installed missing LaTeX package, retrying compile'
+      )
+    } catch (error) {
+      const installResult =
+        attempt < maxRetries
+          ? await LatexPackageAutoInstaller.promises.installMissingPackageFromOutput(
+              request.project_id,
+              error.output
+            )
+          : null
+
+      if (!installResult) {
+        throw error
+      }
+
+      logger.info(
+        {
+          projectId: request.project_id,
+          userId: request.user_id,
+          compileAttempt: attempt + 1,
+          installer: installResult.installer,
+          missingFile: installResult.missingFile,
+          packages: installResult.packages,
+        },
+        'installed missing LaTeX package after compile failure, retrying compile'
+      )
+    }
+  }
 }
 
 async function _saveOutputFiles({
@@ -845,20 +908,38 @@ function _emitMetrics(request, status, stats, timings) {
   }
 }
 
+export const doCompileWithLockCallback = callbackify(doCompileWithLock)
+export const stopCompileCallback = callbackify(stopCompile)
+export const clearProjectCallback = callbackify(clearProject)
+export const clearExpiredProjectsCallback = callbackify(clearExpiredProjects)
+export const syncFromCodeCallback = callbackifyMultiResult(syncFromCode, [
+  'codePositions',
+  'downloadedFromCache',
+])
+export const syncFromPdfCallback = callbackifyMultiResult(syncFromPdf, [
+  'pdfPositions',
+  'downloadedFromCache',
+])
+export const wordcountCallback = callbackify(wordcount)
+
+export {
+  doCompileWithLockCallback as doCompileWithLock,
+  stopCompileCallback as stopCompile,
+  clearProjectCallback as clearProject,
+  clearExpiredProjectsCallback as clearExpiredProjects,
+  syncFromCodeCallback as syncFromCode,
+  syncFromPdfCallback as syncFromPdf,
+  wordcountCallback as wordcount,
+}
+
 export default {
-  doCompileWithLock: callbackify(doCompileWithLock),
-  stopCompile: callbackify(stopCompile),
-  clearProject: callbackify(clearProject),
-  clearExpiredProjects: callbackify(clearExpiredProjects),
-  syncFromCode: callbackifyMultiResult(syncFromCode, [
-    'codePositions',
-    'downloadedFromCache',
-  ]),
-  syncFromPdf: callbackifyMultiResult(syncFromPdf, [
-    'pdfPositions',
-    'downloadedFromCache',
-  ]),
-  wordcount: callbackify(wordcount),
+  doCompileWithLock: doCompileWithLockCallback,
+  stopCompile: stopCompileCallback,
+  clearProject: clearProjectCallback,
+  clearExpiredProjects: clearExpiredProjectsCallback,
+  syncFromCode: syncFromCodeCallback,
+  syncFromPdf: syncFromPdfCallback,
+  wordcount: wordcountCallback,
   promises: {
     doCompileWithLock,
     stopCompile,

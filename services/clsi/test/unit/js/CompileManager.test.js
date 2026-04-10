@@ -151,6 +151,12 @@ describe('CompileManager', () => {
     }
 
     ctx.LatexMetrics = { enableLatexMkMetrics: sinon.stub() }
+    ctx.LatexPackageAutoInstaller = {
+      getMaxRetries: sinon.stub().returns(3),
+      promises: {
+        installMissingPackageFromOutput: sinon.stub().resolves(null),
+      },
+    }
 
     ctx.StatsManager = { sampleRequest: sinon.stub().returns(false) }
 
@@ -217,6 +223,10 @@ describe('CompileManager', () => {
 
     vi.doMock('../../../app/js/LatexMetrics', () => ({
       default: ctx.LatexMetrics,
+    }))
+
+    vi.doMock('../../../app/js/LatexPackageAutoInstaller', () => ({
+      default: ctx.LatexPackageAutoInstaller,
     }))
 
     vi.doMock('../../../app/js/StatsManager', () => ({
@@ -327,6 +337,82 @@ describe('CompileManager', () => {
       it('should not inject draft mode by default', ctx => {
         expect(ctx.DraftModeManager.promises.injectDraftMode).not.to.have.been
           .called
+      })
+    })
+
+    describe('with a missing latex package that can be auto-installed', () => {
+      beforeEach(async ctx => {
+        ctx.LatexRunner.promises.runLatex
+          .onFirstCall()
+          .resolves({
+            stdout: "LaTeX Error: File `algorithmic.sty' not found.",
+          })
+          .onSecondCall()
+          .resolves({})
+        ctx.LatexPackageAutoInstaller.promises.installMissingPackageFromOutput
+          .onFirstCall()
+          .resolves({
+            installer: 'apt',
+            missingFile: 'algorithmic.sty',
+            packages: ['texlive-science'],
+          })
+          .onSecondCall()
+          .resolves(null)
+
+        ctx.result = await ctx.CompileManager.promises.doCompileWithLock(
+          ctx.request,
+          {},
+          {}
+        )
+      })
+
+      it('should retry the compile after installing the missing package', ctx => {
+        expect(ctx.LatexRunner.promises.runLatex).to.have.callCount(2)
+        expect(
+          ctx.LatexPackageAutoInstaller.promises.installMissingPackageFromOutput
+        ).to.have.been.calledWith(ctx.projectId, {
+          stdout: "LaTeX Error: File `algorithmic.sty' not found.",
+        })
+        expect(ctx.result.outputFiles).to.equal(ctx.buildFiles)
+      })
+    })
+
+    describe('when the compile fails but the missing package can be auto-installed', () => {
+      beforeEach(async ctx => {
+        const error = new Error('exited')
+        error.output = {
+          stdout: "LaTeX Error: File `algorithmic.sty' not found.",
+        }
+        ctx.LatexRunner.promises.runLatex
+          .onFirstCall()
+          .rejects(error)
+          .onSecondCall()
+          .resolves({})
+        ctx.LatexPackageAutoInstaller.promises.installMissingPackageFromOutput
+          .onFirstCall()
+          .resolves({
+            installer: 'apt',
+            missingFile: 'algorithmic.sty',
+            packages: ['texlive-science'],
+          })
+          .onSecondCall()
+          .resolves(null)
+
+        ctx.result = await ctx.CompileManager.promises.doCompileWithLock(
+          ctx.request,
+          {},
+          {}
+        )
+      })
+
+      it('should retry the compile using the error output', ctx => {
+        expect(ctx.LatexRunner.promises.runLatex).to.have.callCount(2)
+        expect(
+          ctx.LatexPackageAutoInstaller.promises.installMissingPackageFromOutput
+        ).to.have.been.calledWith(ctx.projectId, {
+          stdout: "LaTeX Error: File `algorithmic.sty' not found.",
+        })
+        expect(ctx.result.outputFiles).to.equal(ctx.buildFiles)
       })
     })
 

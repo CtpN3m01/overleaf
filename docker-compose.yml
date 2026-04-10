@@ -3,7 +3,10 @@ services:
     restart: always
     # Server Pro users:
     # image: quay.io/sharelatex/sharelatex-pro
-    image: sharelatex/sharelatex
+    image: sharelatex/sharelatex:with-spanish
+    build:
+      context: .
+      dockerfile: Dockerfile.sharelatex
     container_name: sharelatex
     depends_on:
       mongo:

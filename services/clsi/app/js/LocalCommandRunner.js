@@ -53,12 +53,14 @@ export default CommandRunner = {
     const proc = spawn(command[0], command.slice(1), {
       cwd: directory,
       env,
-      stdio: ['pipe', 'pipe', 'ignore'],
+      stdio: ['pipe', 'pipe', 'pipe'],
       detached: true,
     })
 
     let stdout = ''
+    let stderr = ''
     proc.stdout.setEncoding('utf8').on('data', data => (stdout += data))
+    proc.stderr.setEncoding('utf8').on('data', data => (stderr += data))
 
     proc.on('error', function (err) {
       logger.err(
@@ -75,14 +77,14 @@ export default CommandRunner = {
         // signal from kill method below
         err = new Error('terminated')
         err.terminated = true
-        return callback(err)
+        return callback(err, { stdout, stderr })
       } else if (code === 1) {
         // exit status from chktex
         err = new Error('exited')
         err.code = code
-        return callback(err)
+        return callback(err, { stdout, stderr })
       } else {
-        return callback(null, { stdout })
+        return callback(null, { stdout, stderr })
       }
     })
 

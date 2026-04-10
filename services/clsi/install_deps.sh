@@ -4,6 +4,7 @@ set -ex
 apt-get update
 
 apt-get install -y \
+  apt-file \
   latexmk \
   texlive-latex-base \
   texlive-latex-recommended \
@@ -12,6 +13,8 @@ apt-get install -y \
   texlive-plain-generic \
   poppler-utils \
   ghostscript \
+
+apt-file update
 
 rm -rf /var/lib/apt/lists/*
 

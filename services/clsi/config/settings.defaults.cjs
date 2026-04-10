@@ -209,3 +209,15 @@ if ((process.env.DOCKER_RUNNER || process.env.SANDBOXED_COMPILES) === 'true') {
     // )
   }
 }
+
+module.exports.clsi = module.exports.clsi || {}
+const autoInstallLatexRetries = Number.parseInt(
+  process.env.CLSI_AUTO_INSTALL_MISSING_LATEX_RETRIES,
+  10
+)
+module.exports.clsi.autoInstallMissingLatexPackages = {
+  enabled: process.env.CLSI_AUTO_INSTALL_MISSING_LATEX_PACKAGES !== 'false',
+  maxRetries: Number.isNaN(autoInstallLatexRetries)
+    ? 3
+    : autoInstallLatexRetries,
+}

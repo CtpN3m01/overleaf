@@ -1,0 +1,26 @@
+FROM sharelatex/sharelatex
+
+# Install TeX Live packages required by common Overleaf projects.
+RUN tlmgr option repository https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/tlnet-final \
+ && tlmgr install \
+    collection-bibtexextra \
+    collection-fontsextra \
+    collection-langspanish \
+    collection-latexextra \
+    collection-latexrecommended \
+    palatino \
+    helvetic \
+    apacite \
+    ieeetran \
+    cite \
+    float \
+    multirow \
+    pdfpages \
+    setspace \
+    times \
+    xcolor \
+    xurl \
+    transparent \
+    pgf \
+    svg \
+    algorithms

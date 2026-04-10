@@ -2,11 +2,15 @@ import Path from 'node:path'
 import { promisify } from 'node:util'
 import Settings from '@overleaf/settings'
 import logger from '@overleaf/logger'
-import CommandRunner from './CommandRunner.js'
+import CommandRunnerModule from './CommandRunner.js'
 import LatexMetrics from './LatexMetrics.js'
 import fs from 'node:fs'
 
 const { addLatexMkMetrics } = LatexMetrics
+const CommandRunner =
+  CommandRunnerModule?.run != null
+    ? CommandRunnerModule
+    : CommandRunnerModule?.default
 
 const ProcessTable = {} // table of currently running jobs (pids or docker container names)
 
@@ -76,7 +80,10 @@ function runLatex(projectId, options, callback) {
     function (error, output) {
       delete ProcessTable[id]
       if (error) {
-        return callback(error)
+        error.output = output
+        return _writeLogOutput(projectId, directory, output, () => {
+          callback(error)
+        })
       }
       if (stats.latexmk) {
         try {
