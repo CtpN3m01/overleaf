@@ -1,80 +1,193 @@
-<h1 align="center">
-  <br>
-  <a href="https://www.overleaf.com"><img src="doc/logo.png" alt="Overleaf" width="300"></a>
-</h1>
+# Overleaf Community Edition — Setup con soporte para español
 
-<h4 align="center">An open-source online real-time collaborative LaTeX editor.</h4>
+Una instancia auto-hospedada de [Overleaf Community Edition](https://github.com/overleaf/overleaf) extendida con un conjunto de paquetes LaTeX preinstalados, incluyendo soporte completo para el idioma español y paquetes comunes para documentos académicos e ingeniería.
 
-<p align="center">
-  <a href="https://github.com/overleaf/overleaf/wiki">Wiki</a> •
-  <a href="https://www.overleaf.com/for/enterprises">Server Pro</a> •
-  <a href="#contributing">Contributing</a> •
-  <a href="https://mailchi.mp/overleaf.com/community-edition-and-server-pro">Mailing List</a> •
-  <a href="#authors">Authors</a> •
-  <a href="#license">License</a>
-</p>
+## Qué agrega este fork
 
-<img src="doc/screenshot.png" alt="A screenshot of a project being edited in Overleaf Community Edition">
-<p align="center">
-  Figure 1: A screenshot of a project being edited in Overleaf Community Edition.
-</p>
+Este repositorio extiende la imagen Docker oficial `sharelatex/sharelatex` con los siguientes paquetes de TeX Live preinstalados:
 
-## Community Edition
+| Paquete / Colección | Descripción |
+|---|---|
+| `collection-bibtexextra` | Estilos y herramientas extendidas de BibTeX |
+| `collection-fontsextra` | Colección amplia de fuentes adicionales |
+| `collection-langspanish` | Soporte completo de español: separación silábica e idioma |
+| `collection-latexextra` | Gran colección de paquetes LaTeX adicionales |
+| `collection-latexrecommended` | Paquetes LaTeX recomendados |
+| `palatino` | Familia de fuentes Palatino |
+| `helvetic` | Familia de fuentes Helvetica |
+| `apacite` | Estilo de citas APA |
+| `ieeetran` | Clase de documento para IEEE Transactions |
+| `cite` | Manejo mejorado de citas |
+| `float` | Interfaz mejorada para objetos flotantes |
+| `multirow` | Celdas de tabla que abarcan múltiples filas |
+| `pdfpages` | Inclusión de documentos PDF completos |
+| `setspace` | Control del interlineado |
+| `times` | Familia de fuentes Times |
+| `xcolor` | Soporte extendido de colores |
+| `xurl` | Mejoras en el salto de línea de URLs |
+| `transparent` | Soporte de transparencia |
+| `pgf` | Portable Graphics Format (base de TikZ) |
+| `svg` | Inclusión de figuras SVG |
+| `algorithms` | Entornos para algoritmos y pseudocódigo |
 
-[Overleaf](https://www.overleaf.com) is an open-source online real-time collaborative LaTeX editor. We run a hosted version at [www.overleaf.com](https://www.overleaf.com), but you can also run your own local version, and contribute to the development of Overleaf.
+## Requisitos previos
 
-> [!CAUTION]
-> Overleaf Community Edition is intended for use in environments where **all** users are trusted. Community Edition is **not** appropriate for scenarios where isolation of users is required due to Sandbox Compiles not being available. When not using Sandboxed Compiles, users have full read and write access to the `sharelatex` container resources (filesystem, network, environment variables) when running LaTeX compiles.
+- [Docker](https://docs.docker.com/get-docker/) 20.10+
+- [Docker Compose](https://docs.docker.com/compose/install/) v2+
 
-For more information on Sandbox Compiles check out our [documentation](https://docs.overleaf.com/on-premises/configuration/overleaf-toolkit/server-pro-only-configuration/sandboxed-compiles).
+## Instalación
 
-## Enterprise
+### 1. Clonar el repositorio
 
-If you want help installing and maintaining Overleaf in your lab or workplace, we offer an officially supported version called [Overleaf Server Pro](https://www.overleaf.com/for/enterprises). It also includes more features for security (SSO with LDAP or SAML), administration and collaboration (e.g. tracked changes). [Find out more!](https://www.overleaf.com/for/enterprises)
+```bash
+git clone https://github.com/CtpN3m01/overleaf.git
+cd overleaf
+```
 
-## Keeping up to date
+### 2. Configurar la URL del sitio
 
-Sign up to the [mailing list](https://mailchi.mp/overleaf.com/community-edition-and-server-pro) to get updates on Overleaf releases and development.
+Abrir `docker-compose.yml` y establecer `OVERLEAF_SITE_URL` con tu dominio o IP:
 
-## Installation
+```yaml
+OVERLEAF_SITE_URL: http://localhost          # para uso local
+# OVERLEAF_SITE_URL: https://tu-dominio.com  # para un servidor público
+```
 
-We have detailed installation instructions in the [Overleaf Toolkit](https://github.com/overleaf/toolkit/).
+### 3. Construir la imagen Docker personalizada
 
-## Upgrading
+Este paso instala todos los paquetes LaTeX listados arriba. Puede tardar **10–20 minutos** en la primera construcción dependiendo de la conexión a internet.
 
-If you are upgrading from a previous version of Overleaf, please see the [Release Notes section on the Wiki](https://github.com/overleaf/overleaf/wiki#release-notes) for all of the versions between your current version and the version you are upgrading to.
+```bash
+docker compose build
+```
 
-## Overleaf Docker Image
+### 4. Iniciar los servicios
 
-This repo contains two dockerfiles, [`Dockerfile-base`](server-ce/Dockerfile-base), which builds the
-`sharelatex/sharelatex-base` image, and [`Dockerfile`](server-ce/Dockerfile) which builds the
-`sharelatex/sharelatex` (or "community") image.
+```bash
+docker compose up -d
+```
 
-The Base image generally contains the basic dependencies like `wget`, plus `texlive`.
-We split this out because it's a pretty heavy set of
-dependencies, and it's nice to not have to rebuild all of that every time.
+Esto inicia tres contenedores:
+- `sharelatex` — la aplicación Overleaf (puerto 80)
+- `mongo` — MongoDB 8.0 con replica set
+- `redis` — Redis 6.2
 
-The `sharelatex/sharelatex` image extends the base image and adds the actual Overleaf code
-and services.
+### 5. Crear la primera cuenta de administrador
 
-Use `make build-base` and `make build-community` from `server-ce/` to build these images.
+Una vez que los contenedores estén corriendo, abrir el navegador y acceder a:
 
-We use the [Phusion base-image](https://github.com/phusion/baseimage-docker)
-(which is extended by our `base` image) to provide us with a VM-like container
-in which to run the Overleaf services. Baseimage uses the `runit` service
-manager to manage services, and we add our init-scripts from the `server-ce/runit`
-folder.
+```
+http://localhost/launchpad
+```
 
-## Contributing
+Seguir las instrucciones en pantalla para crear la cuenta de administrador.
 
-Please see the [CONTRIBUTING](CONTRIBUTING.md) file for information on contributing to the development of Overleaf.
+### 6. Acceder a Overleaf
 
-## Authors
+Navegar a `http://localhost` (o la URL configurada) e iniciar sesión.
 
-[The Overleaf Team](https://www.overleaf.com/about)
+## Persistencia de datos
 
-## License
+Todos los datos se almacenan en directorios locales montados como volúmenes Docker:
 
-The code in this repository is released under the GNU AFFERO GENERAL PUBLIC LICENSE, version 3. A copy can be found in the [`LICENSE`](LICENSE) file.
+| Directorio | Contenido |
+|---|---|
+| `./sharelatex_data_v2/` | Proyectos y archivos de usuarios de Overleaf |
+| `./mongo_data_v2/` | Base de datos MongoDB |
+| `./redis_data_v2/` | Datos de Redis |
 
-Copyright (c) Overleaf, 2014-2025.
+Estos directorios se crean automáticamente en el primer arranque y están en `.gitignore`, por lo que nunca se commitean.
+
+## Comandos útiles
+
+```bash
+# Detener todos los servicios
+docker compose down
+
+# Ver logs en tiempo real
+docker compose logs -f sharelatex
+
+# Reiniciar un servicio
+docker compose restart sharelatex
+
+# Reconstruir la imagen tras cambios en Dockerfile.sharelatex
+docker compose build --no-cache
+docker compose up -d
+```
+
+## Configuración adicional
+
+Las opciones adicionales se configuran en `docker-compose.yml` bajo la sección `environment` del servicio `sharelatex`. Opciones comunes:
+
+```yaml
+OVERLEAF_APP_NAME: Overleaf Community Edition
+EMAIL_CONFIRMATION_DISABLED: "true"
+OVERLEAF_ADMIN_EMAIL: admin@ejemplo.com
+```
+
+## Configuración de correo (SMTP)
+
+Por defecto, la confirmación de correo está desactivada (`EMAIL_CONFIRMATION_DISABLED: "true"`). Para habilitar el envío de correos (invitaciones, recuperación de contraseña, notificaciones), seguir estos pasos:
+
+### 1. Descomentar y completar las variables en `docker-compose.yml`
+
+```yaml
+EMAIL_CONFIRMATION_DISABLED: "false"
+
+OVERLEAF_EMAIL_FROM_ADDRESS: "no-reply@tu-dominio.com"
+OVERLEAF_ADMIN_EMAIL: "admin@tu-dominio.com"
+
+OVERLEAF_EMAIL_SMTP_HOST: smtp.tu-proveedor.com
+OVERLEAF_EMAIL_SMTP_PORT: 587
+OVERLEAF_EMAIL_SMTP_SECURE: false
+OVERLEAF_EMAIL_SMTP_USER: tu-usuario@tu-dominio.com
+OVERLEAF_EMAIL_SMTP_PASS: tu-contraseña
+OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH: true
+OVERLEAF_EMAIL_SMTP_IGNORE_TLS: false
+```
+
+### 2. Valores según proveedor
+
+**Gmail** (requiere [contraseña de aplicación](https://myaccount.google.com/apppasswords)):
+```yaml
+OVERLEAF_EMAIL_SMTP_HOST: smtp.gmail.com
+OVERLEAF_EMAIL_SMTP_PORT: 587
+OVERLEAF_EMAIL_SMTP_SECURE: false
+OVERLEAF_EMAIL_SMTP_USER: tu-cuenta@gmail.com
+OVERLEAF_EMAIL_SMTP_PASS: xxxx-xxxx-xxxx-xxxx  # contraseña de aplicación
+```
+
+**Outlook / Office 365:**
+```yaml
+OVERLEAF_EMAIL_SMTP_HOST: smtp.office365.com
+OVERLEAF_EMAIL_SMTP_PORT: 587
+OVERLEAF_EMAIL_SMTP_SECURE: false
+OVERLEAF_EMAIL_SMTP_USER: tu-cuenta@outlook.com
+OVERLEAF_EMAIL_SMTP_PASS: tu-contraseña
+```
+
+**Servidor SMTP propio (ej. Postfix):**
+```yaml
+OVERLEAF_EMAIL_SMTP_HOST: mail.tu-dominio.com
+OVERLEAF_EMAIL_SMTP_PORT: 587
+OVERLEAF_EMAIL_SMTP_SECURE: false
+OVERLEAF_EMAIL_SMTP_USER: no-reply@tu-dominio.com
+OVERLEAF_EMAIL_SMTP_PASS: tu-contraseña
+```
+
+### 3. Aplicar los cambios
+
+```bash
+docker compose down
+docker compose up -d
+```
+
+> **Nota:** Las credenciales SMTP quedan en texto plano en `docker-compose.yml`. Si vas a subir el repositorio a GitHub, usá un archivo `.env` para los valores sensibles y referencialo desde el compose así:
+> ```yaml
+> OVERLEAF_EMAIL_SMTP_PASS: ${SMTP_PASS}
+> ```
+> El archivo `.env` ya está en `.gitignore` por defecto.
+
+## Licencia
+
+Este proyecto está basado en [Overleaf](https://github.com/overleaf/overleaf), publicado bajo la [GNU AGPL v3](LICENSE).
