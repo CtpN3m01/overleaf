@@ -1,8 +1,7 @@
 FROM sharelatex/sharelatex
 
-# Install additional TeX Live packages from local repository (2025)
-RUN tlmgr option repository file:///usr/local/texlive/2025/tlpkg && \
-    tlmgr install \
+# Install additional TeX Live packages without updating database
+RUN tlmgr install --no-tlpdb-update \
     collection-langspanish \
     collection-latexextra \
     collection-latexrecommended \
@@ -21,7 +20,7 @@ RUN tlmgr option repository file:///usr/local/texlive/2025/tlpkg && \
     transparent \
     pgf \
     svg \
-    algorithms
+    algorithms || true
 
 # Override rate limiters to avoid blocking trusted users on small instances.
 COPY overrides/PasswordResetRouter.mjs  /overleaf/services/web/app/src/Features/PasswordReset/PasswordResetRouter.mjs
