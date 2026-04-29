@@ -2,7 +2,8 @@ FROM sharelatex/sharelatex
 
 # Install TeX Live packages required by common Overleaf projects.
 # Note: update the tlmgr repository URL to the current TeX Live year if rebuilding from scratch.
-RUN tlmgr install --no-tlpdb-update \
+RUN tlmgr option repository https://mirrors.aliyun.com/CTAN/systems/texlive/tlnet && \
+    tlmgr install \
     collection-langspanish \
     collection-latexextra \
     collection-latexrecommended \
