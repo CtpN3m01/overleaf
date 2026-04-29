@@ -2,7 +2,7 @@ FROM sharelatex/sharelatex
 
 # Install TeX Live packages required by common Overleaf projects.
 # Note: update the tlmgr repository URL to the current TeX Live year if rebuilding from scratch.
-RUN tlmgr option repository http://mirror.ctan.org/systems/texlive/2025/tlnet \
+RUN tlmgr option repository http://ctan.math.illinois.edu/systems/texlive/2025/tlnet \
  && tlmgr install \
     collection-bibtexextra \
     collection-fontsextra \
