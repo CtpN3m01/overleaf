@@ -1,29 +1,5 @@
 FROM sharelatex/sharelatex
 
-# Install TeX Live packages required by common Overleaf projects.
-# Note: update the tlmgr repository URL to the current TeX Live year if rebuilding from scratch.
-RUN tlmgr option repository https://mirrors.aliyun.com/CTAN/systems/texlive/tlnet && \
-    tlmgr install \
-    collection-langspanish \
-    collection-latexextra \
-    collection-latexrecommended \
-    palatino \
-    helvetic \
-    apacite \
-    ieeetran \
-    cite \
-    float \
-    multirow \
-    pdfpages \
-    setspace \
-    times \
-    xcolor \
-    xurl \
-    transparent \
-    pgf \
-    svg \
-    algorithms
-
 # Override rate limiters to avoid blocking trusted users on small instances.
 COPY overrides/PasswordResetRouter.mjs  /overleaf/services/web/app/src/Features/PasswordReset/PasswordResetRouter.mjs
 COPY overrides/LoginRateLimiter.mjs     /overleaf/services/web/app/src/Features/Security/LoginRateLimiter.mjs
