@@ -39,12 +39,12 @@ services:
       ENABLE_CONVERSIONS: "true"
 
       # Disables email confirmation requirement
-      EMAIL_CONFIRMATION_DISABLED: "true"
+      EMAIL_CONFIRMATION_DISABLED: "false"
 
       ## Set for SSL via nginx-proxy
       #VIRTUAL_HOST: 103.112.212.22
 
-      OVERLEAF_SITE_URL: http://localhost
+      OVERLEAF_SITE_URL: https://overleaf.eanel.pro
       # OVERLEAF_NAV_TITLE: Overleaf Community Edition
       # OVERLEAF_HEADER_IMAGE_URL: http://example.com/mylogo.png
       # OVERLEAF_ADMIN_EMAIL: support@it.com
@@ -52,20 +52,18 @@ services:
       # OVERLEAF_LEFT_FOOTER: '[{"text": "Another page I want to link to can be found <a href=\"here\">here</a>"} ]'
       # OVERLEAF_RIGHT_FOOTER: '[{"text": "Hello I am on the Right"} ]'
 
-      # OVERLEAF_EMAIL_FROM_ADDRESS: "hello@example.com"
+      OVERLEAF_EMAIL_FROM_ADDRESS: "soporteeanelpro@gmail.com"
 
       # OVERLEAF_EMAIL_AWS_SES_ACCESS_KEY_ID:
       # OVERLEAF_EMAIL_AWS_SES_SECRET_KEY:
 
-      # OVERLEAF_EMAIL_SMTP_HOST: smtp.example.com
-      # OVERLEAF_EMAIL_SMTP_PORT: 587
-      # OVERLEAF_EMAIL_SMTP_SECURE: false
-      # OVERLEAF_EMAIL_SMTP_USER:
-      # OVERLEAF_EMAIL_SMTP_PASS:
-      # OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH: true
-      # OVERLEAF_EMAIL_SMTP_IGNORE_TLS: false
-      # OVERLEAF_EMAIL_SMTP_NAME: '127.0.0.1'
-      # OVERLEAF_EMAIL_SMTP_LOGGER: true
+      OVERLEAF_EMAIL_SMTP_HOST: ${SMTP_HOST}
+      OVERLEAF_EMAIL_SMTP_PORT: ${SMTP_PORT}
+      OVERLEAF_EMAIL_SMTP_SECURE: ${SMTP_SECURE}
+      OVERLEAF_EMAIL_SMTP_USER: ${SMTP_USER}
+      OVERLEAF_EMAIL_SMTP_PASS: ${SMTP_PASS}
+      OVERLEAF_EMAIL_SMTP_TLS_REJECT_UNAUTH: true
+      OVERLEAF_EMAIL_SMTP_IGNORE_TLS: false
       # OVERLEAF_CUSTOM_EMAIL_FOOTER: "This system is run by department x"
 
       # ENABLE_CRON_RESOURCE_DELETION: true
